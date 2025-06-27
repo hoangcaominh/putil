@@ -146,14 +146,14 @@ pub async fn do_command(args: &[String]) -> Result<String, String> {
             match db.add_alias(name, &aliases).await {
                 Ok(count) => {
                     if count > 0 {
-                        msg_queue.push(format!("Added {} aliased for player id {}", count, name));
+                        msg_queue.push(format!("Added {} aliased for player {}", count, name));
                     } else {
                         msg_queue.push(format!("No player called {} was found", name));
                     }
                 }
                 Err(e) => {
                     return Err(format!(
-                        "Failed to add aliases for player id {}: {}",
+                        "Failed to add aliases for player {}: {}",
                         name, e
                     ));
                 }
