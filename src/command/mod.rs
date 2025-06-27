@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::database;
+use crate::database::Database;
 
 pub enum Command {
     NoOp,
@@ -58,7 +58,13 @@ fn print_msg_queue(queue: Vec<String>) -> String {
     queue.join("\n")
 }
 
-pub fn do_command(args: &[String]) -> Result<String, String> {
+pub async fn do_command(args: &[String]) -> Result<String, String> {
+    let db = match Database::new().await {
+        Ok(val) => val,
+        Err(e) => {
+            panic!("Failed to connect to database: {}", e);
+        }
+    };
     let mut args = VecDeque::from_iter(args);
 
     let command = match args.pop_front() {
@@ -68,7 +74,7 @@ pub fn do_command(args: &[String]) -> Result<String, String> {
 
     let mut msg_queue = vec![];
     match Command::parse(command) {
-        Command::List => match database::list() {
+        Command::List => match db.list().await {
             Ok(players) => {
                 for player in players {
                     msg_queue.push(format!("{}", &player.name));
@@ -86,7 +92,7 @@ pub fn do_command(args: &[String]) -> Result<String, String> {
                     ]));
                 }
             };
-            match database::info(name) {
+            match db.info(name).await {
                 Ok(res) => match res {
                     Some(player) => {
                         msg_queue.push("Player info:".into());
@@ -115,7 +121,7 @@ pub fn do_command(args: &[String]) -> Result<String, String> {
                     ]));
                 }
             };
-            match database::create(name) {
+            match db.create(name).await {
                 Ok(id) => msg_queue.push(format!("Created player {} with id {}", name, id)),
                 Err(e) => return Err(format!("Failed to create player {}: {}", name, e)),
             }
@@ -137,7 +143,7 @@ pub fn do_command(args: &[String]) -> Result<String, String> {
                     Command::print_help(Command::AddAlias),
                 ]));
             }
-            match database::add_alias(name, &aliases) {
+            match db.add_alias(name, &aliases).await {
                 Ok(count) => {
                     if count > 0 {
                         msg_queue.push(format!("Added {} aliased for player id {}", count, name));
@@ -163,7 +169,7 @@ pub fn do_command(args: &[String]) -> Result<String, String> {
                     ]));
                 }
             };
-            match database::search(name) {
+            match db.search(name).await {
                 Ok(results) => {
                     println!("Found {} results:", results.len());
                     for result in results {
