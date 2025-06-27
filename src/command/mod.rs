@@ -62,8 +62,8 @@ pub async fn do_command(args: &[String]) -> Result<String, String> {
     let db = match Database::new().await {
         Ok(val) => val,
         Err(e) => {
-            panic!("Failed to connect to database: {}", e);
-        }
+            return Err(format!("Failed to connect to database: {}", e));
+        },
     };
     let mut args = VecDeque::from_iter(args);
 

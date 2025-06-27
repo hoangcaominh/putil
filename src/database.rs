@@ -29,7 +29,7 @@ impl Database {
 
         tokio::spawn(async move {
             if let Err(e) = connection.await {
-                panic!("Connection error: {}", e);
+                eprintln!("Connection error: {}", e);
             }
         });
 
